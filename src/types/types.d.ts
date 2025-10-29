@@ -6,3 +6,14 @@ interface Employee {
   notes: string;
   participantNames: string[];
 }
+
+interface Message {
+  id: string;
+  senderId: string;
+  text: string;
+  timestamp?: {
+    toMillis?: () => number;
+    seconds?: number;
+    toDate?: () => Date;
+  };
+}

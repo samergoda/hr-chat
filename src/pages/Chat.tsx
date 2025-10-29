@@ -1,10 +1,9 @@
-import { useState } from "react";
-import EmployeeList from "@/components/features/EmployeeList";
-import ChatWindow from "@/components/features/ChatWindow";
+import EmployeeList from '@/components/features/EmployeeList';
+import ChatWindow from '@/components/features/ChatWindow';
+import { useSelectedEmployee } from '@/context/useSelectedEmployee';
 
 export default function ChatPage() {
-  // selected employee name string
-  const [selectedEmployee, setSelectedEmployee] = useState<string>("");
+  const { selectedEmployee, setSelectedEmployee } = useSelectedEmployee();
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -16,13 +15,16 @@ export default function ChatPage() {
               <h2 className="text-lg font-semibold">Employees</h2>
               <p className="text-sm text-muted-foreground">Click to chat</p>
             </div>
-            <EmployeeList onSelect={(name) => setSelectedEmployee(name)} selected={selectedEmployee} />
+            <EmployeeList
+              onSelect={setSelectedEmployee}
+              selected={selectedEmployee || { id: '', employeeName: '' }}
+            />
           </div>
 
           {/* Right column */}
           <div className="w-[70%]">
             <ChatWindow
-              employeeName={selectedEmployee}
+              employee={selectedEmployee || { id: '', employeeName: '' }}
               // hr user is always 'HR' in this example
               hrSenderName="HR"
             />

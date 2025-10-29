@@ -1,152 +1,204 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, useRef, type FormEvent, type KeyboardEvent } from 'react';
 import {
   collection,
-  addDoc,
-  query,
-  where,
-  orderBy,
+  doc,
   onSnapshot,
+  orderBy,
+  query,
   serverTimestamp,
+  writeBatch,
+  setDoc,
   type DocumentData,
   type QueryDocumentSnapshot,
-} from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { toast } from "sonner";
-import ChatMessages from "./ChatMessages";
+} from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { toast } from 'sonner';
+import ChatMessages from './ChatMessages';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { useSelectedEmployee } from '@/context/useSelectedEmployee';
 
-// 🔹 Define Firestore message type
-interface Message {
-  id: string;
-  sender: string;
-  receiver: string;
-  text: string;
-  timestamp?: {
-    toMillis?: () => number;
-    seconds?: number;
-    toDate?: () => Date;
-  };
-}
-
-// 🔹 Props
 interface ChatWindowProps {
-  employeeName: string;
-  hrSenderName?: string;
+  employee?: { id: string; employeeName: string };
+  conversationId?: string; // <- strongly recommended (employee)
+  hrSenderId?: string; // machine ID, e.g. "hr_sconnor"
+  hrDisplayName?: string; // for UI only
+  hrSenderName: string;
 }
 
-export default function ChatWindow({ employeeName, hrSenderName = "HR" }: ChatWindowProps) {
+export default function ChatWindow({
+  employee: propEmployee,
+  conversationId,
+  hrSenderId = 'HR',
+  hrDisplayName = 'HR',
+}: ChatWindowProps) {
+  const { selectedEmployee } = useSelectedEmployee();
+  const employee = propEmployee || selectedEmployee;
   const [messages, setMessages] = useState<Message[]>([]);
-  const [input, setInput] = useState("");
-  // const messagesEndRef = useRef<HTMLDivElement | null>(null);
-
-  // //  Auto-scroll to bottom
-  // useEffect(() => {
-  //   // messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  // }, [messages]);
-
-  //  Realtime Firestore listeners
-  useEffect(() => {
-    //  Clear messages when switching employees
-    setMessages([]);
-
-    if (!employeeName) return;
-
-    const messagesRef = collection(db, "messages");
-
-    // HR → Employee
-    const q1 = query(messagesRef, where("sender", "==", hrSenderName), where("receiver", "==", employeeName), orderBy("timestamp", "asc"));
-
-    // Employee → HR
-    const q2 = query(messagesRef, where("sender", "==", employeeName), where("receiver", "==", hrSenderName), orderBy("timestamp", "asc"));
-
-    // 🔥 Listen to both directions
-    const unsub1 = onSnapshot(q1, (snap) => {
-      const newMsgs = snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => ({
-        id: d.id,
-        ...d.data(),
-      })) as Message[];
-
-      setMessages((prev) => mergeAndSortMessages(prev, newMsgs));
-    });
-
-    const unsub2 = onSnapshot(q2, (snap) => {
-      const newMsgs = snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => ({
-        id: d.id,
-        ...d.data(),
-      })) as Message[];
-      setMessages((prev) => mergeAndSortMessages(prev, newMsgs));
-    });
-
-    return () => {
-      unsub1();
-      unsub2();
-    };
-  }, [employeeName, hrSenderName]);
-
-  //  Merge and sort messages
-  function mergeAndSortMessages(prevArray: Message[], newArray: Message[]): Message[] {
-    const map = new Map<string, Message>();
-    [...prevArray, ...newArray].forEach((msg) => map.set(msg.id, msg));
-
-    return Array.from(map.values()).sort((a, b) => {
-      const ta = a.timestamp?.toMillis?.() ?? (a.timestamp?.seconds ? a.timestamp.seconds * 1000 : 0);
-      const tb = b.timestamp?.toMillis?.() ?? (b.timestamp?.seconds ? b.timestamp.seconds * 1000 : 0);
-      return ta - tb;
-    });
+  const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
+  const previousMessagesCount = useRef<number>(0);
+  const disabled = !employee || sending;
+  const canSend = !!input.trim();
+  // Derive the conversationId if not provided (temporary fallback).
+  // Prefer passing a real employee from the caller.
+  function getConversationId() {
+    if (conversationId) return conversationId;
+    if (!employee) return '';
+    // TEMP fallback: make a deterministic id from employee name.
+    // Replace this with the real employee ASAP.
+    return `emp_${employee.id.trim().toLowerCase().replace(/\s+/g, '_')}`;
   }
 
-  // Send message
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      // Send message
+      sendMessage(e as FormEvent);
+    }
+  };
+
+  // Ensure the conversation doc exists (idempotent)
+  async function ensureConversationDoc(convId: string) {
+    const convRef = doc(db, 'conversations', convId);
+    await setDoc(
+      convRef,
+      {
+        participantNames: [hrDisplayName, employee?.employeeName ?? ''],
+        lastMessage: '', // optional: only set if not present
+        lastMessageTimestamp: serverTimestamp(),
+      },
+      { merge: true },
+    );
+  }
+
+  // Realtime listener on the nested messages subcollection
+  useEffect(() => {
+    setMessages([]);
+    if (!employee) return;
+
+    const convId = getConversationId();
+    const msgsRef = collection(db, 'conversations', convId, 'messages');
+    const q = query(msgsRef, orderBy('timestamp', 'asc'));
+
+    // Make sure the conversation doc exists so Admin list can show it
+    ensureConversationDoc(convId).catch(console.error);
+
+    const unsub = onSnapshot(q, (snap) => {
+      const rows = snap.docs.map((d: QueryDocumentSnapshot<DocumentData>) => {
+        const data = d.data();
+        return {
+          id: d.id,
+          senderId: data.senderId,
+          text: data.text,
+          timestamp: data.timestamp,
+        } as Message;
+      });
+
+      // Only show toast if there are new messages and it's not the initial load
+      if (previousMessagesCount.current > 0 && rows.length > previousMessagesCount.current) {
+        // Show notification only for messages we didn't send
+        const lastMessage = rows[rows.length - 1];
+        if (lastMessage && lastMessage.senderId !== hrSenderId) {
+          toast.success(`New message from ${employee?.employeeName || 'employee'}`);
+        }
+      }
+
+      previousMessagesCount.current = rows.length;
+      setMessages(rows);
+    });
+
+    return () => unsub();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [employee, conversationId, hrSenderId, hrDisplayName]);
+
+  //  Send message
   async function sendMessage(e: FormEvent) {
     e.preventDefault();
-    if (!input.trim() || !employeeName) return;
+    setSending(true);
 
+    const text = input.trim();
+    if (!text || !employee) return;
+
+    const convId = getConversationId();
     try {
-      await addDoc(collection(db, "messages"), {
-        sender: hrSenderName,
-        receiver: employeeName,
-        text: input.trim(),
-        timestamp: serverTimestamp(),
+      const batch = writeBatch(db);
+
+      const convRef = doc(db, 'conversations', convId);
+      const msgRef = doc(collection(convRef, 'messages')); // auto-ID
+      const now = serverTimestamp();
+
+      // 1) message doc
+      batch.set(msgRef, {
+        senderId: hrSenderId, // machine id
+        text,
+        timestamp: now,
       });
-      setInput("");
+
+      // 2) conversation preview/sort fields
+      batch.set(
+        convRef,
+        {
+          participantNames: [hrDisplayName, employee],
+          lastMessage: text,
+          lastMessageTimestamp: now,
+        },
+        { merge: true },
+      );
+
+      await batch.commit();
+      setInput('');
     } catch (err) {
-      toast.error("Failed to send message");
-      console.error("Send message failed:", err);
+      console.error('Send message failed:', err);
+      toast.error('Failed to send message');
+    } finally {
+      setSending(false);
     }
   }
 
-  // 🧱 UI
   return (
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
         <div>
-          <h3 className="text-lg font-semibold">{employeeName ?? "Select an employee"}</h3>
+          <h3 className="text-lg font-semibold">
+            {employee?.employeeName ?? 'Select an employee'}
+          </h3>
           <div className="text-xs text-gray-500">HR Chat</div>
         </div>
-        <div className="text-sm text-gray-600">{employeeName ? `Chatting with ${employeeName}` : "No chat selected"}</div>
+        <div className="text-sm text-gray-600">
+          {employee?.employeeName ? `Chatting with ${employee.employeeName}` : 'No chat selected'}
+        </div>
       </header>
 
       {/* Messages */}
-      <ChatMessages employeeName={employeeName} hrSenderName={hrSenderName} messages={messages} />
+      <ChatMessages
+        employee={employee || { id: '', employeeName: '' }}
+        hrSenderName={hrDisplayName}
+        messages={messages.map((m) => ({
+          id: m.id,
+          sender: m.senderId, // keep compatibility with your ChatMessages
+          text: m.text,
+          timestamp: m.timestamp,
+        }))}
+      />
 
       {/* Input */}
       <form onSubmit={sendMessage} className="px-4 py-3 border-t bg-white">
         <div className="flex gap-3">
-          <input
-            type="text"
+          <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            disabled={!employeeName}
-            placeholder={employeeName ? `Send message` : "Select employee to start"}
-            className="flex-1 rounded-md border px-3 py-2 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            onKeyDown={handleKeyDown}
+            disabled={disabled}
+            placeholder={
+              employee ? `Send message to ${employee.employeeName}` : 'Select employee to start'
+            }
+            className="flex-1"
           />
-          <button
-            type="submit"
-            disabled={!employeeName}
-            className={`rounded-md px-4 py-2 font-medium transition ${
-              employeeName ? "bg-indigo-600 text-white hover:bg-indigo-700" : "bg-gray-200 text-gray-500 cursor-not-allowed"
-            }`}>
-            Send
-          </button>
+          <Button type="submit" disabled={disabled || !canSend}>
+            {sending ? 'Sending…' : 'Send'}
+          </Button>
         </div>
       </form>
     </div>

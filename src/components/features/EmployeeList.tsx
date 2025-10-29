@@ -1,38 +1,36 @@
-import { useEffect, useRef, useState } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { toast } from "sonner";
+import { useEffect, useRef, useState } from 'react';
+import { collection, onSnapshot } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+// import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-interface Employee {
-  id: string;
-  employeeName: string;
-  date?: { seconds: number };
-}
+import { useSelectedEmployee } from '@/context/useSelectedEmployee';
 
 interface EmployeeListProps {
-  onSelect: (id: string) => void;
-  selected: string | null;
+  onSelect?: (employee: { id: string; employeeName: string }) => void;
+  selected?: { id: string; employeeName: string };
 }
 
-export default function EmployeeList({ onSelect, selected }: EmployeeListProps) {
+export default function EmployeeList({ onSelect, selected: propSelected }: EmployeeListProps) {
+  const { selectedEmployee, setSelectedEmployee } = useSelectedEmployee();
+  const selected = propSelected || selectedEmployee;
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Track the number of employees/messages previously loaded
   const prevCountRef = useRef<number>(0);
-  const firstLoadRef = useRef(true); // prevents toast on first load
+  const firstLoadRef = useRef(true);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "feedback"), (snapshot) => {
+    const unsub = onSnapshot(collection(db, 'feedback'), (snapshot) => {
       const data = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       })) as Employee[];
 
-      //  Handle new messages only after the first snapshot
-      if (!firstLoadRef.current && data.length > prevCountRef.current) {
-        toast.success("You have a new message");
-      }
+      // if (!firstLoadRef.current && data.length > prevCountRef.current) {
+      //   toast.success('You have a new message');
+      // }
 
       prevCountRef.current = data.length;
       firstLoadRef.current = false;
@@ -44,44 +42,51 @@ export default function EmployeeList({ onSelect, selected }: EmployeeListProps) 
     return () => unsub();
   }, []);
 
-  // Loading state
   if (loading) {
-    return <div className="p-4 text-gray-500">Loading employees…</div>;
+    return <div className="p-4 text-muted-foreground">Loading employees…</div>;
   }
 
-  // Empty state
   if (employees.length === 0) {
-    return <div className="p-4 text-gray-500">No employees found.</div>;
+    return <div className="p-4 text-muted-foreground">No employees found.</div>;
   }
 
   return (
     <div className="h-full overflow-auto">
-      <ul className="divide-y">
+      <ul className="divide-y divide-border">
         {employees.map((employee) => {
-          const isActive = selected === employee.id;
+          const isActive = selected?.id === employee.id;
+
           return (
             <li key={employee.id}>
-              <button
-                onClick={() => onSelect(employee.id)}
-                className={`w-full text-left flex items-center gap-3 px-4 py-3 hover:bg-gray-50 ${
-                  isActive ? "bg-gray-100 font-medium" : ""
-                }`}>
-                <div className="flex items-center gap-3">
-                  {/* Avatar */}
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-sm font-medium">
-                    {employee.employeeName?.charAt(0).toUpperCase() || "?"}
-                  </div>
-                  <div>
-                    {/* Employee name */}
-                    <div className="text-sm">{employee.employeeName || "Unknown"}</div>
+              <Button
+                variant={isActive ? 'secondary' : 'ghost'}
+                className={`w-full justify-start px-4 py-3 h-auto rounded-none gap-3 text-left ${
+                  isActive ? 'bg-secondary text-secondary-foreground' : ''
+                }`}
+                onClick={() => {
+                  const selectedEmployee = {
+                    id: employee.id,
+                    employeeName: employee.employeeName,
+                  };
+                  setSelectedEmployee(selectedEmployee);
+                  onSelect?.(selectedEmployee);
+                }}
+              >
+                <Avatar className="h-8 w-8">
+                  <AvatarFallback>
+                    {employee.employeeName?.charAt(0).toUpperCase() || '?'}
+                  </AvatarFallback>
+                </Avatar>
 
-                    {/* Date */}
-                    <div className="text-xs text-gray-500">
-                      {employee.date?.seconds ? new Date(employee.date.seconds * 1000).toLocaleString() : "Unknown"}
-                    </div>
-                  </div>
+                <div className="flex flex-col items-start">
+                  <span className="text-sm font-medium">{employee.employeeName || 'Unknown'}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {employee.date?.seconds
+                      ? new Date(employee.date.seconds * 1000).toLocaleString()
+                      : 'Unknown'}
+                  </span>
                 </div>
-              </button>
+              </Button>
             </li>
           );
         })}
