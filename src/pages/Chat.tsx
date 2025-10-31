@@ -11,10 +11,6 @@ export default function ChatPage() {
         <div className="flex h-[80vh] ">
           {/* Left column */}
           <div className="w-[30%] border-r">
-            <div className="p-4 border-b">
-              <h2 className="text-lg font-semibold">Employees</h2>
-              <p className="text-sm text-muted-foreground">Click to chat</p>
-            </div>
             <EmployeeList
               onSelect={setSelectedEmployee}
               selected={selectedEmployee || { id: '', employeeName: '' }}

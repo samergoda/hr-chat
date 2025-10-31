@@ -5,35 +5,9 @@ import Sidebar from './components/layout/Sidebar';
 import './App.css';
 import Header from './components/layout/Header';
 import { SelectedEmployeeProvider } from './context/SelectedEmployeeContext';
-
-import { useEffect } from 'react';
-import { db } from '@/lib/firebase';
-import { collection, onSnapshot } from 'firebase/firestore';
 import { Toaster } from 'sonner';
 
 function App() {
-  function TestConnection() {
-    useEffect(() => {
-      async function check() {
-        // const snap = await getDocs(collection(db, "conversations"));
-        onSnapshot(collection(db, 'conversations'), (snapshot) => {
-          const data = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-
-          console.log('🔥 Firestore data:', data);
-          // setFeedback(data);
-        });
-        // console.log("✅ Connected to Firestore:", snap, "docs found");
-      }
-      check();
-    }, []);
-
-    return null;
-  }
-
-  TestConnection();
   return (
     <SelectedEmployeeProvider>
       <BrowserRouter>

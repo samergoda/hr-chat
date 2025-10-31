@@ -17,3 +17,11 @@ interface Message {
     toDate?: () => Date;
   };
 }
+
+interface Feedback {
+  id: string;
+  date?: Timestamp | { seconds?: number; nanoseconds?: number };
+  employeeName?: string;
+  score?: number;
+  notes?: string;
+}
