@@ -19,7 +19,7 @@ import { Button } from '../ui/button';
 import { useSelectedEmployee } from '@/context/useSelectedEmployee';
 
 interface ChatWindowProps {
-  employee?: { id: string; employeeName: string };
+  employee: { id: string; employeeName: string };
 }
 
 export default function ChatWindow({ employee: propEmployee }: ChatWindowProps) {
@@ -170,15 +170,7 @@ export default function ChatWindow({ employee: propEmployee }: ChatWindowProps) 
       </header>
 
       {/* Messages */}
-      <ChatMessages
-        employee={employee || { id: '', employeeName: '' }}
-        messages={messages.map((m) => ({
-          id: m.id,
-          sender: m.senderId,
-          text: m.text,
-          timestamp: m.timestamp,
-        }))}
-      />
+      <ChatMessages employee={employee || { id: '', employeeName: '' }} messages={messages} />
 
       {/* Form send message */}
       <form onSubmit={sendMessage} className="px-4 py-3 border-t bg-white">

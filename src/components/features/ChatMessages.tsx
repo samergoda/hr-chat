@@ -3,12 +3,7 @@ import { useEffect, useRef } from 'react';
 interface ChatWindowProps {
   employee: { id: string; employeeName: string };
   hrSenderName?: string;
-  messages: Array<{
-    id: string;
-    sender: string;
-    text: string;
-    timestamp?: { toDate?: () => Date; seconds?: number };
-  }>;
+  messages: Message[];
 }
 
 export default function ChatMessages({ employee, messages }: ChatWindowProps) {
@@ -36,7 +31,7 @@ export default function ChatMessages({ employee, messages }: ChatWindowProps) {
           )}
 
           {messages.map((m) => {
-            const isFromHR = m.sender === 'HR';
+            const isFromHR = m.senderId === 'HR';
             const ts =
               m.timestamp?.toDate?.() ??
               (m.timestamp?.seconds ? new Date(m.timestamp.seconds * 1000) : null);

@@ -1,15 +1,16 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { CircleX, Menu } from 'lucide-react';
+import { CircleX, LayoutDashboard, Menu, MessagesSquare } from 'lucide-react';
+import { Button } from '../ui/button';
 
 export default function Sidebar() {
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
   const links = [
-    { name: 'Dashboard', path: '/dashboard' },
-    { name: 'Chat', path: '/chat' },
+    { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard /> },
+    { name: 'Chat', path: '/chat', icon: <MessagesSquare /> },
   ];
 
   // Close drawer when route changes
@@ -20,7 +21,7 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile */}
-      <button
+      <Button
         type="button"
         onClick={() => setOpen(true)}
         className="md:hidden fixed left-4 top-2.5 z-40 rounded-md border bg-white px-3 py-2 text-sm font-medium shadow-sm"
@@ -29,7 +30,7 @@ export default function Sidebar() {
         aria-expanded={open}
       >
         <Menu />
-      </button>
+      </Button>
 
       {/* Backdrop on mobile */}
       <div
@@ -45,7 +46,7 @@ export default function Sidebar() {
       <aside
         id="sidebar"
         className={cn(
-          'fixed left-0 top-0 z-40 h-screen w-64 border-r bg-gray-100 p-4 transition-transform',
+          'fixed left-0 top-0 h-auto z-40  w-64 border-r bg-gray-100 p-4 transition-transform',
 
           open ? 'translate-x-0' : '-translate-x-full',
 
@@ -78,11 +79,11 @@ export default function Sidebar() {
                 key={link.path}
                 to={link.path}
                 className={cn(
-                  'rounded px-2 py-1 text-gray-700 hover:bg-gray-200 hover:text-black',
+                  'rounded px-2 py-1 text-gray-700 hover:bg-gray-200 hover:text-black flex items-center gap-2',
                   active && 'font-semibold text-blue-600 bg-blue-50',
                 )}
               >
-                {link.name}
+                {link.icon} {link.name}
               </Link>
             );
           })}
