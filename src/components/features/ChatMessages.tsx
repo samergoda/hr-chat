@@ -23,7 +23,7 @@ export default function ChatMessages({ employee, messages }: ChatWindowProps) {
           Select an employee from the left to open chat
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-4 h-[80vh] overflow-y-scroll">
           {messages.length === 0 && (
             <div className="text-center text-sm text-gray-400 mt-6">
               No messages yet. Start the conversation.

@@ -52,9 +52,9 @@ export default function Dashboard() {
     <div className="mt-10 mx-6">
       <h1 className="text-2xl mb-5 font-bold">Dashboard</h1>
       {/* Main content */}
-      <div className="flex-1 flex  space-y-8">
+      <div className="flex-1 flex flex-col md:flex-row md:items-start space-y-8 md:space-y-0 md:space-x-8">
         {/* Table */}
-        <div className="overflow-y-auto w-[60%] border rounded-lg">
+        <div className="overflow-y-auto w-full md:w-[60%] border rounded-lg">
           <table className="min-w-full text-sm text-left">
             <thead className="bg-gray-100 sticky top-0">
               <tr>
@@ -78,7 +78,7 @@ export default function Dashboard() {
         </div>
 
         {/* Real-time Pie Chart */}
-        <div className="w-[40%] h-80">
+        <div className="w-full md:w-[40%] h-80">
           <ResponsiveContainer>
             <PieChart>
               <Pie data={scoreData} dataKey="value" nameKey="name" outerRadius={100} label>

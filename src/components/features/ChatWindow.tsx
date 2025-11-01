@@ -152,7 +152,7 @@ export default function ChatWindow({ employee: propEmployee }: ChatWindowProps) 
   }
 
   return (
-    <div className="flex flex-col h-full bg-gray-50">
+    <div className="flex flex-col  bg-gray-50">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
         {/* Title */}
