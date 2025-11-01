@@ -160,12 +160,15 @@ export default function ChatWindow({
     <div className="flex flex-col h-full bg-gray-50">
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b bg-white">
+        {/* Title */}
         <div>
           <h3 className="text-lg font-semibold">
             {employee?.employeeName ?? 'Select an employee'}
           </h3>
           <div className="text-xs text-gray-500">HR Chat</div>
         </div>
+
+        {/* Subtitle */}
         <div className="text-sm text-gray-600">
           {employee?.employeeName ? `Chatting with ${employee.employeeName}` : 'No chat selected'}
         </div>
@@ -177,7 +180,7 @@ export default function ChatWindow({
         hrSenderName={hrDisplayName}
         messages={messages.map((m) => ({
           id: m.id,
-          sender: m.senderId, // keep compatibility with your ChatMessages
+          sender: m.senderId,
           text: m.text,
           timestamp: m.timestamp,
         }))}

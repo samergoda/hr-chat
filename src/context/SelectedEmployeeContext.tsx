@@ -1,16 +1,6 @@
 import { createContext, useState } from 'react';
 import type { ReactNode } from 'react';
 
-// Define the shape of our context value
-interface SelectedEmployeeContextType {
-  selectedEmployee: {
-    id: string;
-    employeeName: string;
-  } | null;
-  setSelectedEmployee: (employee: { id: string; employeeName: string } | null) => void;
-  clearSelectedEmployee: () => void;
-}
-
 // Create the context with a default value
 const SelectedEmployeeContext = createContext<SelectedEmployeeContextType | undefined>(undefined);
 
