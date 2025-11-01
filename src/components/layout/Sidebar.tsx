@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Menu } from 'lucide-react';
+import { CircleX, Menu } from 'lucide-react';
 
 export default function Sidebar() {
   const location = useLocation();
@@ -19,7 +19,7 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile: hamburger */}
+      {/* Mobile */}
       <button
         type="button"
         onClick={() => setOpen(true)}
@@ -45,11 +45,10 @@ export default function Sidebar() {
       <aside
         id="sidebar"
         className={cn(
-          // base
           'fixed left-0 top-0 z-40 h-screen w-64 border-r bg-gray-100 p-4 transition-transform',
-          // mobile: slide in/out
+
           open ? 'translate-x-0' : '-translate-x-full',
-          // desktop: always visible & static
+
           'md:translate-x-0 md:static md:block',
         )}
         role="navigation"
@@ -64,7 +63,7 @@ export default function Sidebar() {
             className="rounded-md border bg-white px-2 py-1 text-sm shadow-sm"
             aria-label="Close menu"
           >
-            ✕
+            <CircleX />
           </button>
         </div>
 
@@ -89,9 +88,6 @@ export default function Sidebar() {
           })}
         </nav>
       </aside>
-
-      {/* (Optional) Content offset for desktop so content doesn't hide under the sidebar */}
-      {/* <div className="md:pl-64" /> */}
     </>
   );
 }

@@ -19,11 +19,7 @@ export default function ChatPage() {
 
           {/* Right column */}
           <div className="w-[70%]">
-            <ChatWindow
-              employee={selectedEmployee || { id: '', employeeName: '' }}
-              // hr user is always 'HR' in this example
-              hrSenderName="HR"
-            />
+            <ChatWindow employee={selectedEmployee || { id: '', employeeName: '' }} />
           </div>
         </div>
       </div>

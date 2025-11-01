@@ -13,15 +13,16 @@ interface EmployeeListProps {
 }
 
 export default function EmployeeList({ onSelect, selected: propSelected }: EmployeeListProps) {
-  const { selectedEmployee, setSelectedEmployee } = useSelectedEmployee();
-  const selected = propSelected || selectedEmployee;
-
+  // State
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
-
   const prevCountRef = useRef<number>(0);
   const firstLoadRef = useRef(true);
+
+  // Context
+  const { selectedEmployee, setSelectedEmployee } = useSelectedEmployee();
+  const selected = propSelected || selectedEmployee;
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'feedback'), (snapshot) => {

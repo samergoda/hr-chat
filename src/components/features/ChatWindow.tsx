@@ -20,33 +20,28 @@ import { useSelectedEmployee } from '@/context/useSelectedEmployee';
 
 interface ChatWindowProps {
   employee?: { id: string; employeeName: string };
-  conversationId?: string; // <- strongly recommended (employee)
-  hrSenderId?: string; // machine ID, e.g. "hr_sconnor"
-  hrDisplayName?: string; // for UI only
-  hrSenderName: string;
 }
 
-export default function ChatWindow({
-  employee: propEmployee,
-  conversationId,
-  hrSenderId = 'HR',
-  hrDisplayName = 'HR',
-}: ChatWindowProps) {
-  const { selectedEmployee } = useSelectedEmployee();
-  const employee = propEmployee || selectedEmployee;
+export default function ChatWindow({ employee: propEmployee }: ChatWindowProps) {
+  // State
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const previousMessagesCount = useRef<number>(0);
+
+  // Context
+  const { selectedEmployee } = useSelectedEmployee();
+  const employee = propEmployee || selectedEmployee;
+
+  // Variables
   const disabled = !employee || sending;
   const canSend = !!input.trim();
+
   // Derive the conversationId if not provided (temporary fallback).
-  // Prefer passing a real employee from the caller.
   function getConversationId() {
-    if (conversationId) return conversationId;
     if (!employee) return '';
+
     // TEMP fallback: make a deterministic id from employee name.
-    // Replace this with the real employee ASAP.
     return `emp_${employee.id.trim().toLowerCase().replace(/\s+/g, '_')}`;
   }
 
@@ -64,7 +59,7 @@ export default function ChatWindow({
     await setDoc(
       convRef,
       {
-        participantNames: [hrDisplayName, employee?.employeeName ?? ''],
+        participantNames: ['HR', employee?.employeeName ?? ''],
         lastMessage: '', // optional: only set if not present
         lastMessageTimestamp: serverTimestamp(),
       },
@@ -99,7 +94,7 @@ export default function ChatWindow({
       if (previousMessagesCount.current > 0 && rows.length > previousMessagesCount.current) {
         // Show notification only for messages we didn't send
         const lastMessage = rows[rows.length - 1];
-        if (lastMessage && lastMessage.senderId !== hrSenderId) {
+        if (lastMessage && lastMessage.senderId !== 'HR') {
           toast.success(`New message from ${employee?.employeeName || 'employee'}`);
         }
       }
@@ -110,7 +105,7 @@ export default function ChatWindow({
 
     return () => unsub();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [employee, conversationId, hrSenderId, hrDisplayName]);
+  }, [employee]);
 
   //  Send message
   async function sendMessage(e: FormEvent) {
@@ -130,7 +125,7 @@ export default function ChatWindow({
 
       // 1) message doc
       batch.set(msgRef, {
-        senderId: hrSenderId, // machine id
+        senderId: 'HR',
         text,
         timestamp: now,
       });
@@ -139,7 +134,7 @@ export default function ChatWindow({
       batch.set(
         convRef,
         {
-          participantNames: [hrDisplayName, employee],
+          participantNames: ['HR', employee],
           lastMessage: text,
           lastMessageTimestamp: now,
         },
@@ -177,7 +172,6 @@ export default function ChatWindow({
       {/* Messages */}
       <ChatMessages
         employee={employee || { id: '', employeeName: '' }}
-        hrSenderName={hrDisplayName}
         messages={messages.map((m) => ({
           id: m.id,
           sender: m.senderId,
@@ -186,9 +180,10 @@ export default function ChatWindow({
         }))}
       />
 
-      {/* Input */}
+      {/* Form send message */}
       <form onSubmit={sendMessage} className="px-4 py-3 border-t bg-white">
         <div className="flex gap-3">
+          {/* Input message */}
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -199,6 +194,8 @@ export default function ChatWindow({
             }
             className="flex-1"
           />
+
+          {/* Button send message */}
           <Button type="submit" disabled={disabled || !canSend}>
             {sending ? 'Sending…' : 'Send'}
           </Button>

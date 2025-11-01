@@ -11,7 +11,7 @@ interface ChatWindowProps {
   }>;
 }
 
-export default function ChatMessages({ employee, hrSenderName = 'HR', messages }: ChatWindowProps) {
+export default function ChatMessages({ employee, messages }: ChatWindowProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Scroll to bottom
@@ -36,7 +36,7 @@ export default function ChatMessages({ employee, hrSenderName = 'HR', messages }
           )}
 
           {messages.map((m) => {
-            const isFromHR = m.sender === hrSenderName;
+            const isFromHR = m.sender === 'HR';
             const ts =
               m.timestamp?.toDate?.() ??
               (m.timestamp?.seconds ? new Date(m.timestamp.seconds * 1000) : null);
