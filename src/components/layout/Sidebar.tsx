@@ -46,7 +46,7 @@ export default function Sidebar() {
       <aside
         id="sidebar"
         className={cn(
-          'fixed left-0 top-0 h-full md:h-auto z-40  w-64 border-r bg-gray-100 p-4 transition-transform',
+          'fixed left-0 top-0 h-full md:h-screen z-40  w-64 border-r bg-gray-100 p-4 transition-transform',
 
           open ? 'translate-x-0' : '-translate-x-full',
 
