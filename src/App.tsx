@@ -4,7 +4,7 @@ import Chat from '@/pages/Chat';
 import Sidebar from './components/layout/Sidebar';
 import './App.css';
 import Header from './components/layout/Header';
-import { SelectedEmployeeProvider } from './context/SelectedEmployeeContext';
+import { SelectedEmployeeProvider } from './context/Employee/SelectedEmployeeContext';
 import { Toaster } from 'sonner';
 
 function App() {

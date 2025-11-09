@@ -3,7 +3,7 @@ import { collection, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { useSelectedEmployee } from '@/context/useSelectedEmployee';
+import { useSelectedEmployee } from '@/context/Employee/useSelectedEmployee';
 import { Input } from '../ui/input';
 import { cn } from '@/lib/utils';
 
@@ -47,11 +47,13 @@ export default function EmployeeList({ onSelect, selected: propSelected }: Emplo
     return employees.filter((e) => (e.employeeName || 'unknown').toLowerCase().includes(q));
   }, [employees, query]);
 
+  // Loading statement
   if (loading) {
     return <div className="p-4 text-muted-foreground text-sm sm:text-base">Loading employees…</div>;
   }
 
-  if (employees.length === 0) {
+  // If no employees
+  if (!employees.length) {
     return (
       <div className="p-4 text-muted-foreground text-sm sm:text-base">No employees found.</div>
     );

@@ -6,13 +6,13 @@ const SelectedEmployeeContext = createContext<SelectedEmployeeContextType | unde
 
 // Provider component
 export function SelectedEmployeeProvider({ children }: { children: ReactNode }) {
-  const [selectedEmployee, setSelectedEmployee] = useState<{
-    id: string;
-    employeeName: string;
-  } | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<SelectedEmployee>({
+    id: '',
+    employeeName: '',
+  });
 
   const clearSelectedEmployee = () => {
-    setSelectedEmployee(null);
+    setSelectedEmployee({ id: '', employeeName: '' });
   };
 
   // Value object that will be passed to consumers

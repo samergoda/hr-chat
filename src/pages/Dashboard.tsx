@@ -43,7 +43,11 @@ export default function Dashboard() {
     () =>
       [1, 2, 3, 4, 5].map((score) => ({
         name: `${score} Star`,
-        value: feedback.filter((f) => (f.score ?? 0) === score).length,
+        // Percentage value
+        value: +(
+          (feedback.filter((f) => (f.score ?? 0) === score).length / feedback.length) *
+          100
+        ).toFixed(1),
       })),
     [feedback],
   );
@@ -86,7 +90,7 @@ export default function Dashboard() {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value, name) => [`${name}`, `${value}%`]} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

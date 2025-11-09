@@ -26,11 +26,16 @@ interface Feedback {
   notes?: string;
 }
 
+interface SelectedEmployee {
+  id: string;
+  employeeName: string;
+}
+
 interface SelectedEmployeeContextType {
   selectedEmployee: {
     id: string;
     employeeName: string;
-  } | null;
-  setSelectedEmployee: (employee: { id: string; employeeName: string } | null) => void;
+  };
+  setSelectedEmployee: (employee: { id: string; employeeName: string }) => void;
   clearSelectedEmployee: () => void;
 }

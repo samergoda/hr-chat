@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 import ChatMessages from './ChatMessages';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { useSelectedEmployee } from '@/context/useSelectedEmployee';
+import { useSelectedEmployee } from '@/context/Employee/useSelectedEmployee';
 
 interface ChatWindowProps {
   employee: { id: string; employeeName: string };
