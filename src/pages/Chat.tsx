@@ -21,7 +21,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-8xl rounded-lg mt-14 bg-white shadow-md overflow-hidden">
-        <div className="flex md:h-4/5 flex-col md:flex-row">
+        <div className="flex md:h-1/2 flex-col md:flex-row">
           {/* Left column (Employee List) */}
           <div className={`border-r md:w-[30%] ${showChat ? 'hidden md:block' : 'block'} w-full`}>
             <EmployeeList

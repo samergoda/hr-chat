@@ -12,9 +12,9 @@ export default function ChatMessages({ employee, messages }: ChatWindowProps) {
   // Scroll to bottom
   useEffect(() => {
     if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'auto' });
+      messagesEndRef.current.scrollTop = messagesEndRef.current.scrollHeight;
     }
-  }, [messages]); // runs whenever new messages appear
+  }, [messages]);
 
   return (
     <div className="flex-1 overflow-auto p-4">
@@ -23,7 +23,7 @@ export default function ChatMessages({ employee, messages }: ChatWindowProps) {
           Select an employee from the left to open chat
         </div>
       ) : (
-        <div className="space-y-4 h-[80vh] overflow-y-scroll">
+        <div ref={messagesEndRef} className="space-y-4 h-[60vh] overflow-y-scroll">
           {messages.length === 0 && (
             <div className="text-center text-sm text-gray-400 mt-6">
               No messages yet. Start the conversation.
@@ -55,7 +55,7 @@ export default function ChatMessages({ employee, messages }: ChatWindowProps) {
           })}
 
           {/* Scroll target */}
-          <div ref={messagesEndRef} />
+          {/* <div ref={messagesEndRef} /> */}
         </div>
       )}
     </div>
